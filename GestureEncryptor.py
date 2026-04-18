@@ -5,6 +5,7 @@ import mediapipe as mp
 from mediapipe.tasks.python.vision import HandLandmarksConnections
 from mediapipe.tasks.python.vision.drawing_utils import draw_landmarks
 
+from FileHandler import FileHandler
 from GestureHandler import GestureHandler
 from VideoStream import VideoStream
 
@@ -12,9 +13,11 @@ FRAMES_TIL_ACCEPT = 30
 
 
 class GestureEncryptor:
-    def __init__(self, filename, videoStream, gesture, encryptOrDecrypt=True):
+    def __init__(self, filename, output, videoStream, gesture, fileHandler, encryptOrDecrypt=True):
         self.filename = filename
+        self.output = output
         self.encryptOrDecrypt = encryptOrDecrypt
+        self.fileHandler = fileHandler
         self.videoStreamer = videoStream
         self.gestureHandler = gesture
 
@@ -35,6 +38,9 @@ class GestureEncryptor:
             if gestureType and gestureType != "None":
                 if FRAMES_TIL_ACCEPT <= frameDelay:
                     currentInputs.append(gestureType)
+                    print(f"Added {gestureType} to inputs, now is {currentInputs}")
+                    if len(currentInputs) >= 10:
+                        break
 
                     frameDelay = 0
                     currentGesture = None
@@ -49,17 +55,35 @@ class GestureEncryptor:
                 frameDelay = 0
 
             if gestureResults.hand_landmarks:
-                self.render(image, gestureResults.hand_landmarks[0], gestureType)
+                image = self.getRender(image, gestureResults.hand_landmarks[0], gestureType)
+
+            cv2.imshow("Image", image)
 
             if cv2.waitKey(1) & 0xff == ord("q"):
                 break
 
-    def render(self, image, landmarks, gesture):
+        if self.encryptOrDecrypt:
+            data = self.encrypt(inputs=currentInputs)
+            assert data
+        else:
+            data = self.decrypt(inputs=currentInputs)
+            assert data
+
+        with open(self.output, "wb") as f:
+            f.write(data)
+            f.close()
+
+    def encrypt(self, inputs):
+        return self.fileHandler.encrypt(self.filename, "".join(inputs))
+
+    def decrypt(self, inputs):
+        return self.fileHandler.decrypt(self.filename, "".join(inputs))
+
+    def getRender(self, image, landmarks, gesture):
         draw_landmarks(image, landmarks, connections=HandLandmarksConnections.HAND_CONNECTIONS)
         image = cv2.putText(image, gesture, (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
-        cv2.imshow("Image", image)
-
+        return image
 
 parser = argparse.ArgumentParser(
     prog="Gesture Encryptor",
@@ -67,27 +91,27 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("filename")
-parser.add_argument("--encrypt", action="store_true")
+parser.add_argument("--output")
 parser.add_argument("--decrypt", action="store_true")
 
 args = parser.parse_args()
 
 filename = args.filename
-encrypt = args.encrypt
+output = args.output
 decrypt = args.decrypt
-
-if encrypt and decrypt:
-    raise Exception("Can't both be encrypting and decrypting!")
 
 vidCapture = cv2.VideoCapture(0)
 
 videoStreamer = VideoStream(vidCapture)
 gestureHandler = GestureHandler()
+fileHandler = FileHandler()
 
 gestureEncryptor = GestureEncryptor(
     filename=filename,
-    encryptOrDecrypt=True,
+    output=output,
+    encryptOrDecrypt=not decrypt,
     videoStream=videoStreamer,
-    gesture=gestureHandler)
+    gesture=gestureHandler,
+    fileHandler=fileHandler)
 
 gestureEncryptor.start()

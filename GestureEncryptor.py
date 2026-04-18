@@ -39,7 +39,7 @@ class GestureEncryptor:
                 if FRAMES_TIL_ACCEPT <= frameDelay:
                     currentInputs.append(gestureType)
                     print(f"Added {gestureType} to inputs, now is {currentInputs}")
-                    if len(currentInputs) >= 10:
+                    if len(currentInputs) >= 3:
                         break
 
                     frameDelay = 0
@@ -64,22 +64,24 @@ class GestureEncryptor:
 
         assert currentInputs, "Cannot have an empty set of inputs!"
 
+        input = "".join(currentInputs)
+
         if self.encryptOrDecrypt:
-            data = self.encrypt(inputs=currentInputs)
+            data = self.encrypt(input=input)
             assert data
         else:
-            data = self.decrypt(inputs=currentInputs)
+            data = self.decrypt(input=input)
             assert data
 
         with open(self.output, "wb") as f:
             f.write(data)
             f.close()
 
-    def encrypt(self, inputs):
-        return self.fileHandler.encrypt(self.filename, "".join(inputs))
+    def encrypt(self, input):
+        return self.fileHandler.encrypt(self.filename, input)
 
-    def decrypt(self, inputs):
-        return self.fileHandler.decrypt(self.filename, "".join(inputs))
+    def decrypt(self, input):
+        return self.fileHandler.decrypt(self.filename, input)
 
     def getRender(self, image, landmarks, gesture):
         draw_landmarks(image, landmarks, connections=HandLandmarksConnections.HAND_CONNECTIONS)

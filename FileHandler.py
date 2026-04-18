@@ -46,6 +46,7 @@ class FileHandler:
                 print("You have a import error")
             else:
                 decryptionStuff = Fernet(self.getKey(handData))
+                data = None
                 try:
                     data = decryptionStuff.decrypt(fileData.encode("utf-8"))
                 except cryptography.fernet.InvalidToken:

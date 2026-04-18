@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+from mediapipe.tasks.python.vision import HandLandmarksConnections
 from mediapipe.tasks.python.vision.drawing_utils import draw_landmarks
 
 from GestureHandler import GestureHandler
@@ -15,11 +16,10 @@ while True:
 
     mpImage = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
 
-    landmarkResults = gestureHandler.getLandmarks(mpImage)
     gestureResults = gestureHandler.getGestures(mpImage)
 
-    if landmarkResults.hand_landmarks:
-        draw_landmarks(image, landmarkResults.hand_landmarks[0])
+    if gestureResults.hand_landmarks:
+        draw_landmarks(image, gestureResults.hand_landmarks[0], connections=HandLandmarksConnections.HAND_CONNECTIONS)
 
     cv2.imshow("Image", image)
 

@@ -1,3 +1,5 @@
+import argparse
+
 import cv2
 import mediapipe as mp
 from mediapipe.tasks.python.vision import HandLandmarksConnections
@@ -24,10 +26,17 @@ decrypt = args.decrypt
 if encrypt and decrypt:
     raise Exception("Can't both be encrypting and decrypting!")
 
+FRAMES_TIL_ACCEPT = 30
+
 vidCapture = cv2.VideoCapture(0)
 
 videoStreamer = VideoStream(vidCapture)
 gestureHandler = GestureHandler()
+
+currentGesture = None
+frameDelay = 0
+
+currentInputs = []
 
 while True:
     image, imageRGB = videoStreamer.getCapture()
@@ -35,6 +44,23 @@ while True:
     mpImage = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
 
     gestureResults = gestureHandler.getGestures(mpImage)
+
+    gestureType = gestureResults.gestures[0][0].category_name if len(gestureResults.gestures) > 0 else None
+    if gestureType and gestureType != "None":
+        if FRAMES_TIL_ACCEPT <= frameDelay:
+            currentInputs.append(gestureType)
+
+            frameDelay = 0
+            currentGesture = None
+
+        if currentGesture == gestureType:
+            frameDelay += 1
+        else:
+            currentGesture = gestureType
+            frameDelay = 0
+    else:
+        currentGesture = None
+        frameDelay = 0
 
     if gestureResults.hand_landmarks:
         draw_landmarks(image, gestureResults.hand_landmarks[0], connections=HandLandmarksConnections.HAND_CONNECTIONS)

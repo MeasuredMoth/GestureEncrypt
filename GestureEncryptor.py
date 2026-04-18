@@ -62,6 +62,8 @@ class GestureEncryptor:
             if cv2.waitKey(1) & 0xff == ord("q"):
                 break
 
+        assert currentInputs, "Cannot have an empty set of inputs!"
+
         if self.encryptOrDecrypt:
             data = self.encrypt(inputs=currentInputs)
             assert data
@@ -99,6 +101,11 @@ args = parser.parse_args()
 filename = args.filename
 output = args.output
 decrypt = args.decrypt
+
+if decrypt:
+    assert ".gesture" in filename
+else:
+    assert ".gesture" in output
 
 vidCapture = cv2.VideoCapture(0)
 

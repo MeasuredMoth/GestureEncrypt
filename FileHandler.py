@@ -29,11 +29,9 @@ class FileHandler:
             else:
                 encryptionStuff = Fernet(self.getKey(handData))
                 data = encryptionStuff.encrypt(fileData.encode("utf-8"))
-                return data
             finally:
                 f.close()
-
-        return None
+                return data
 
     def decrypt(self, fileName, handData):
         with open(fileName, "r") as f:
@@ -51,12 +49,10 @@ class FileHandler:
                 decryptionStuff = Fernet(self.getKey(handData))
                 try:
                     data = decryptionStuff.decrypt(fileData.encode("utf-8"))
-                    return data
                 except cryptography.fernet.InvalidToken:
                     print("wrong password")
                 except TypeError:
                     print("wrong type used for password")
             finally:
                 f.close()
-
-            return None
+                return data

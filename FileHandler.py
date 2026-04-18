@@ -29,7 +29,6 @@ class FileHandler:
             else:
                 encryptionStuff = Fernet(self.getKey(handData))
                 data = encryptionStuff.encrypt(fileData.encode("utf-8"))
-            finally:
                 f.close()
                 return data
 
@@ -53,6 +52,5 @@ class FileHandler:
                     print("wrong password")
                 except TypeError:
                     print("wrong type used for password")
-            finally:
                 f.close()
                 return data

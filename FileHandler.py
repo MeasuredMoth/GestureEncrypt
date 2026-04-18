@@ -1,25 +1,33 @@
+import base64
+
 import cryptography
+import os
 from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes, kdf
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 class FileHandler:
-    def __init__(self, file, key,token):
-        self.files = file
-        self.key = key
-        self.token = token
+    def __init__(self):
+        self.token = ""
 
-    def createKeyPair(self):
-        key = Fernet.generate_key()
-        self.key = key
+    def giveBackFile(self,fileName):
+        newFileName = os.path.basename(fileName).split(".")[0] + ".gesture"
+        with open(newFileName, "wb") as f:
+            f.write(self.token)
+            f.close()
 
-    def giveBackData(self, file):
-        with open(file, "w") as file:
-            file.write(self.token)
-            file.close()
 
-    def encrypt(self, file):
-        with open(file, "r") as file:
+    def getKey(self,handData):
+        byteData = handData.encode("utf-8")
+        if byteData:
+            byteData = byteData.ljust(32, b'\0')
+        key = base64.urlsafe_b64encode(byteData)
+        return key
+
+    def encrypt(self,fileName,handData):
+        with open(fileName, "r") as f:
             try:
-                handData = file.read()
+                fileData = f.read()
             except FileNotFoundError:
                 print("we could not find this file")
             except EOFError:
@@ -29,15 +37,16 @@ class FileHandler:
             except ImportError:
                 print("You have a import error")
             else:
-                encryptionStuff = Fernet(self.key)
-                self.token = encryptionStuff.encrypt(handData)
-                self.giveBackData(self, file)
+                encryptionStuff = Fernet(self.getKey(handData))
+                self.token = encryptionStuff.encrypt(fileData.encode("utf-8"))
+                self.giveBackFile(fileName)
             finally:
-                file.close()
-    def decrypt(self, file):
-        with open(file, "r") as file:
+                f.close()
+
+    def decrypt(self,fileName,handData):
+        with open(fileName, "r") as f:
             try:
-                handData = file.read()
+                fileData = f.read()
             except FileNotFoundError:
                 print("we could not find this file")
             except EOFError:
@@ -47,8 +56,14 @@ class FileHandler:
             except ImportError:
                 print("You have a import error")
             else:
-                decryptionStuff = Fernet(self.key)
-                self.token = decryptionStuff.decrypt(handData)
-                self.giveBackData(self,file)
+                decryptionStuff = Fernet(self.getKey(handData))
+                try:
+                    self.token = decryptionStuff.decrypt(fileData)
+                except cryptography.fernet.InvalidToken:
+                    print("wrong password")
+                except TypeError:
+                    print("wrong type used for password")
+                else:
+                    self.giveBackFile(fileName)
             finally:
-                file.close()
+                f.close()

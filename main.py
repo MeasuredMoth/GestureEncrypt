@@ -1,6 +1,8 @@
 import argparse
 import os.path
 
+import cv2
+
 from FileHandler import FileHandler
 from GestureEncryptor import GestureEncryptor
 from GestureHandler import GestureHandler
@@ -8,7 +10,7 @@ from VideoStream import VideoStream
 
 parser = argparse.ArgumentParser(
     prog="Gesture Encryptor",
-    description="Encrypts and decrypts files as .gesture by using hand gestures"
+    description="Encrypts and decrypts files as .gesture files by using hand gestures."
 )
 
 parser.add_argument("filename")

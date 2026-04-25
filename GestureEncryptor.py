@@ -36,10 +36,13 @@ class GestureEncryptor:
             gestureResults = self.gestureHandler.getGestures(mpImage)
 
             gestureType = gestureResults.gestures[0][0].category_name if len(gestureResults.gestures) > 0 else None
+
             if gestureType and gestureType != "None":
                 if FRAMES_TIL_ACCEPT <= frameDelay:
                     currentInputs.append(gestureType)
+
                     print(f"Added {gestureType} to inputs, now is {currentInputs}")
+
                     if len(currentInputs) >= 3:
                         break
 

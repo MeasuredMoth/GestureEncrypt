@@ -1,13 +1,7 @@
-import argparse
-
 import cv2
 import mediapipe as mp
 from mediapipe.tasks.python.vision import HandLandmarksConnections
 from mediapipe.tasks.python.vision.drawing_utils import draw_landmarks
-
-from FileHandler import FileHandler
-from GestureHandler import GestureHandler
-from VideoStream import VideoStream
 
 FRAMES_TIL_ACCEPT = 30
 
@@ -88,39 +82,3 @@ class GestureEncryptor:
         image = cv2.putText(image, gesture, (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
         return image
-
-parser = argparse.ArgumentParser(
-    prog="Gesture Encryptor",
-    description="Encrypts and decrypts files as .gesture by using hand gestures"
-)
-
-parser.add_argument("filename")
-parser.add_argument("--output")
-parser.add_argument("--decrypt", action="store_true")
-
-args = parser.parse_args()
-
-filename = args.filename
-output = args.output
-decrypt = args.decrypt
-
-if decrypt:
-    assert ".gesture" in filename
-else:
-    assert ".gesture" in output
-
-vidCapture = cv2.VideoCapture(0)
-
-videoStreamer = VideoStream(vidCapture)
-gestureHandler = GestureHandler()
-fileHandler = FileHandler()
-
-gestureEncryptor = GestureEncryptor(
-    filename=filename,
-    output=output,
-    encryptOrDecrypt=not decrypt,
-    videoStream=videoStreamer,
-    gesture=gestureHandler,
-    fileHandler=fileHandler)
-
-gestureEncryptor.start()

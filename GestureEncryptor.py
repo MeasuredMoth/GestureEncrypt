@@ -3,11 +3,18 @@ import mediapipe as mp
 from mediapipe.tasks.python.vision import HandLandmarksConnections
 from mediapipe.tasks.python.vision.drawing_utils import draw_landmarks
 
+from FileHandler import FileHandler
+from GestureHandler import GestureHandler
+from VideoStream import VideoStream
+
 FRAMES_TIL_ACCEPT = 30
 
 
 class GestureEncryptor:
-    def __init__(self, filename, output, videoStream, gesture, fileHandler, encryptOrDecrypt=True):
+    def __init__(
+            self, filename: str, output: str,
+            videoStream: VideoStream, gesture: GestureHandler,
+            fileHandler: FileHandler, encryptOrDecrypt=True):
         self.filename = filename
         self.output = output
         self.encryptOrDecrypt = encryptOrDecrypt
@@ -58,24 +65,22 @@ class GestureEncryptor:
 
         assert currentInputs, "Cannot have an empty set of inputs!"
 
-        input = "".join(currentInputs)
+        password = "".join(currentInputs)
 
         if self.encryptOrDecrypt:
-            data = self.encrypt(input=input)
-            assert data
+            data = self.encrypt(password)
         else:
-            data = self.decrypt(input=input)
-            assert data
+            data = self.decrypt(password)
 
-        with open(self.output, "wb") as f:
-            f.write(data)
-            f.close()
+        assert data
 
-    def encrypt(self, input):
-        return self.fileHandler.encrypt(self.filename, input)
+        self.writeOutput(data)
 
-    def decrypt(self, input):
-        return self.fileHandler.decrypt(self.filename, input)
+    def encrypt(self, password):
+        return self.fileHandler.encrypt(self.filename, password)
+
+    def decrypt(self, password):
+        return self.fileHandler.decrypt(self.filename, password)
 
     def getRender(self, image, landmarks, gesture):
         draw_landmarks(image, landmarks, connections=HandLandmarksConnections.HAND_CONNECTIONS)

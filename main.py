@@ -1,4 +1,5 @@
 import argparse
+import os.path
 
 from FileHandler import FileHandler
 from GestureEncryptor import GestureEncryptor
@@ -24,6 +25,9 @@ if decrypt:
     assert ".gesture" in filename
 else:
     assert ".gesture" in output
+
+assert not os.path.isfile(output)
+assert os.path.isfile(filename)
 
 vidCapture = cv2.VideoCapture(0)
 

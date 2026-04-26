@@ -1,26 +1,19 @@
-import argparse
-
 import cv2
 import mediapipe as mp
 from mediapipe.tasks.python.vision import HandLandmarksConnections
 from mediapipe.tasks.python.vision.drawing_utils import draw_landmarks
 
-from FileHandler import FileHandler
-from GestureHandler import GestureHandler
-from video_stream import video_stream
-
-
 FRAMES_TIL_ACCEPT = 30
 
+
 class GestureEncryptor:
-    def __init__(self, filename, output, video_stream, gesture, FileHandler, encrypt_or_decrypt=True, salt_file="important.salt"):
+    def __init__(self, filename, output, videoStream, gesture, fileHandler, encryptOrDecrypt=True):
         self.filename = filename
         self.output = output
-        self.encrypt_or_decrypt = encrypt_or_decrypt
-        self.file_handler = FileHandler
-        self.video_streamer = video_stream
+        self.encryptOrDecrypt = encryptOrDecrypt
+        self.fileHandler = fileHandler
+        self.videoStreamer = videoStream
         self.gestureHandler = gesture
-        self.salt = salt_file
 
     def start(self):
         currentInputs = []
@@ -29,7 +22,7 @@ class GestureEncryptor:
         frameDelay = 0
 
         while True:
-            image, imageRGB = self.video_streamer.getCapture()
+            image, imageRGB = self.videoStreamer.getCapture()
 
             mpImage = mp.Image(image_format=mp.ImageFormat.SRGB, data=imageRGB)
 
@@ -67,7 +60,7 @@ class GestureEncryptor:
 
         input = "".join(currentInputs)
 
-        if self.encrypt_or_decrypt:
+        if self.encryptOrDecrypt:
             data = self.encrypt(input=input)
             assert data
         else:
@@ -79,49 +72,13 @@ class GestureEncryptor:
             f.close()
 
     def encrypt(self, input):
-        return self.file_handler.encrypt(self.filename, input)
+        return self.fileHandler.encrypt(self.filename, input)
 
     def decrypt(self, input):
-        return self.file_handler.decrypt(self.filename, input, self.salt)
+        return self.fileHandler.decrypt(self.filename, input)
 
     def getRender(self, image, landmarks, gesture):
         draw_landmarks(image, landmarks, connections=HandLandmarksConnections.HAND_CONNECTIONS)
         image = cv2.putText(image, gesture, (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
         return image
-
-parser = argparse.ArgumentParser(
-    prog="Gesture Encryptor",
-    description="Encrypts and decrypts files as .gesture by using hand gestures"
-)
-
-parser.add_argument("filename")
-parser.add_argument("--output")
-parser.add_argument("--decrypt", action="store_true")
-
-args = parser.parse_args()
-
-filename = args.filename
-output = args.output
-decrypt = args.decrypt
-
-if decrypt:
-    assert ".gesture" in filename
-else:
-    assert ".gesture" in output
-
-vidCapture = cv2.VideoCapture(0)
-
-video_streamer = video_stream(vidCapture)
-gestureHandler = GestureHandler()
-file_handler = file_handler()
-
-gestureEncryptor = GestureEncryptor(
-    filename=filename,
-    output=output,
-    encrypt_or_decrypt=not decrypt,
-    video_stream=video_streamer,
-    gesture=gestureHandler,
-    file_handler=file_handler)
-
-gestureEncryptor.start()

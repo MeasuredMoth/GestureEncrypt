@@ -7,19 +7,20 @@ from mediapipe.tasks.python.vision.drawing_utils import draw_landmarks
 
 from FileHandler import FileHandler
 from GestureHandler import GestureHandler
-from VideoStream import VideoStream
+from video_stream import video_stream
+
 
 FRAMES_TIL_ACCEPT = 30
 
-
 class GestureEncryptor:
-    def __init__(self, filename, output, videoStream, gesture, fileHandler, encryptOrDecrypt=True):
+    def __init__(self, filename, output, video_stream, gesture, FileHandler, encrypt_or_decrypt=True, salt_file="important.salt"):
         self.filename = filename
         self.output = output
-        self.encryptOrDecrypt = encryptOrDecrypt
-        self.fileHandler = fileHandler
-        self.videoStreamer = videoStream
+        self.encrypt_or_decrypt = encrypt_or_decrypt
+        self.file_handler = FileHandler
+        self.video_streamer = video_stream
         self.gestureHandler = gesture
+        self.salt = salt_file
 
     def start(self):
         currentInputs = []
@@ -28,7 +29,7 @@ class GestureEncryptor:
         frameDelay = 0
 
         while True:
-            image, imageRGB = self.videoStreamer.getCapture()
+            image, imageRGB = self.video_streamer.getCapture()
 
             mpImage = mp.Image(image_format=mp.ImageFormat.SRGB, data=imageRGB)
 
@@ -66,7 +67,7 @@ class GestureEncryptor:
 
         input = "".join(currentInputs)
 
-        if self.encryptOrDecrypt:
+        if self.encrypt_or_decrypt:
             data = self.encrypt(input=input)
             assert data
         else:
@@ -78,10 +79,10 @@ class GestureEncryptor:
             f.close()
 
     def encrypt(self, input):
-        return self.fileHandler.encrypt(self.filename, input)
+        return self.file_handler.encrypt(self.filename, input)
 
     def decrypt(self, input):
-        return self.fileHandler.decrypt(self.filename, input)
+        return self.file_handler.decrypt(self.filename, input, self.salt)
 
     def getRender(self, image, landmarks, gesture):
         draw_landmarks(image, landmarks, connections=HandLandmarksConnections.HAND_CONNECTIONS)
@@ -111,16 +112,16 @@ else:
 
 vidCapture = cv2.VideoCapture(0)
 
-videoStreamer = VideoStream(vidCapture)
+video_streamer = video_stream(vidCapture)
 gestureHandler = GestureHandler()
-fileHandler = FileHandler()
+file_handler = file_handler()
 
 gestureEncryptor = GestureEncryptor(
     filename=filename,
     output=output,
-    encryptOrDecrypt=not decrypt,
-    videoStream=videoStreamer,
+    encrypt_or_decrypt=not decrypt,
+    video_stream=video_streamer,
     gesture=gestureHandler,
-    fileHandler=fileHandler)
+    file_handler=file_handler)
 
 gestureEncryptor.start()

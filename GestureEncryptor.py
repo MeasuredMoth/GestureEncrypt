@@ -64,6 +64,8 @@ class GestureEncryptor:
 
             cv2.imshow("Image", image)
 
+            if cv2.waitKey(1) & 0xff == ord("q"):
+                break
 
         assert currentInputs, "Cannot have an empty set of inputs!"
 
@@ -92,10 +94,11 @@ class GestureEncryptor:
 
     def writeOutput(self, data: bytes):
         try:
-            with open(self.output, "wbx") as f:
+            f = open(self.output, "bx")
+            try:
                 f.write(data)
+            finally:
+                f.close()
         except FileExistsError:
             print("Error: Output " + self.output + " cannot already exist!")
-        finally:
-            f.close()
 

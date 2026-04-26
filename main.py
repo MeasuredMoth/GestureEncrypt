@@ -15,6 +15,8 @@ parser = argparse.ArgumentParser(
     description="Encrypts and decrypts files as .gesture files by using hand gestures."
 )
 
+assert os.path.isfile("gesture_recognizer.task"), "No model task detected. Must be named \"gesture_recognizer.task\""
+
 parser.add_argument("filename")
 parser.add_argument("--output")
 parser.add_argument("--decrypt", action="store_true")
@@ -33,8 +35,8 @@ if decrypt:
 else:
     assert ".gesture" in output
 
-assert not os.path.isfile(output)
-assert os.path.isfile(filename)
+assert not os.path.isfile(output), f"{output} cannot already exist for output!"
+assert os.path.isfile(filename), f"{filename} was not found as input"
 
 vidCapture = cv2.VideoCapture(0)
 

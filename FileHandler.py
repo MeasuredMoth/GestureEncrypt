@@ -40,6 +40,8 @@ class FileHandler:
 
     @staticmethod
     def getSalt(filename):
+        salt = None
+
         try:
             with open(filename, "rb") as f:
                 fileData = f.read()
@@ -53,10 +55,10 @@ class FileHandler:
             print("You have a import error")
         else:
             salt = fileData
-            f.close()
-            return salt
         finally:
             f.close()
+
+        return salt
 
     @staticmethod
     def deriveKey(handData, salt):
@@ -89,6 +91,8 @@ class FileHandler:
             return data
 
     def decrypt(self, gestureFile, handData, saltFile):
+        data = None
+
         try:
             with open(gestureFile, "r") as f:
                 wantedData = f.read()
@@ -110,11 +114,7 @@ class FileHandler:
                 print("wrong password")
             except TypeError:
                 print("wrong type used for password")
-            else:
-                if data is not None:
-                    stringData = data.decode("utf-8")
-                    return stringData
-                else:
-                    return data
         finally:
             f.close()
+
+        return data

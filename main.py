@@ -1,5 +1,7 @@
 import argparse
 
+import cv2
+
 from FileHandler import FileHandler
 from GestureEncryptor import GestureEncryptor
 from GestureHandler import GestureHandler
@@ -13,15 +15,18 @@ parser = argparse.ArgumentParser(
 parser.add_argument("filename")
 parser.add_argument("--output")
 parser.add_argument("--decrypt", action="store_true")
+parser.add_argument("--salt")
 
 args = parser.parse_args()
 
 filename = args.filename
 output = args.output
 decrypt = args.decrypt
+salt = args.salt
 
 if decrypt:
     assert ".gesture" in filename
+    assert salt
 else:
     assert ".gesture" in output
 
@@ -37,6 +42,7 @@ gestureEncryptor = GestureEncryptor(
     encryptOrDecrypt=not decrypt,
     videoStream=videoStreamer,
     gesture=gestureHandler,
-    fileHandler=fileHandler)
+    fileHandler=fileHandler,
+    salt=salt)
 
 gestureEncryptor.start()

@@ -7,13 +7,14 @@ FRAMES_TIL_ACCEPT = 30
 
 
 class GestureEncryptor:
-    def __init__(self, filename, output, videoStream, gesture, fileHandler, encryptOrDecrypt=True):
+    def __init__(self, filename, output, videoStream, gesture, fileHandler, salt: str = "", encryptOrDecrypt=True):
         self.filename = filename
         self.output = output
         self.encryptOrDecrypt = encryptOrDecrypt
         self.fileHandler = fileHandler
         self.videoStreamer = videoStream
         self.gestureHandler = gesture
+        self.salt = salt
 
     def start(self):
         currentInputs = []
@@ -33,7 +34,7 @@ class GestureEncryptor:
                 if FRAMES_TIL_ACCEPT <= frameDelay:
                     currentInputs.append(gestureType)
                     print(f"Added {gestureType} to inputs, now is {currentInputs}")
-                    if len(currentInputs) >= 3:
+                    if len(currentInputs) >= 15:
                         break
 
                     frameDelay = 0
@@ -75,7 +76,7 @@ class GestureEncryptor:
         return self.fileHandler.encrypt(self.filename, input)
 
     def decrypt(self, input):
-        return self.fileHandler.decrypt(self.filename, input)
+        return self.fileHandler.decrypt(self.filename, input, self.salt)
 
     def getRender(self, image, landmarks, gesture):
         draw_landmarks(image, landmarks, connections=HandLandmarksConnections.HAND_CONNECTIONS)

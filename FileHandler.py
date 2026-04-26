@@ -5,50 +5,61 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
 
 class FileHandler:
-    def get_old_key(self, hand_data, file_name):
-        salt = self.get_salt(file_name)
-        key = self.derive_key(hand_data, salt)
+    def getOldKey(self, handData, salt):
+        key = self.deriveKey(handData, salt)
         return key
 
-    def create_key(self, hand_data):
+    def createKey(self, handData):
         salt = os.urandom(16)
-        key = self.derive_key(hand_data, salt)
-        self.create_salt_file(salt)
+        key = self.deriveKey(handData, salt)
+        self.createSaltFile(salt)
         return key
 
     @staticmethod
-    def create_salt_file(salt):
-        with open("important.salt","x") as f:
-            try:
-                f.write(str(salt))
-            except FileExistsError:
-                print("this file already exists. Please delete before you continue encryption")
-            except OSError:
-                print("You have an OS issue")
-            finally:
-                f.close()
-
-    @staticmethod
-    def get_salt(file_name):
-        with open(file_name, "r") as f:
-            try:
-                file_data = f.read()
-            except FileNotFoundError:
-                print("we could not find this file")
-            except EOFError:
-                print("no data is in this file")
-            except BufferError:
-                print("You have a buffer problem")
-            except ImportError:
-                print("You have a import error")
+    def createSaltFile(salt):
+        try:
+            with open("important.salt","xb") as f:
+                f.write(salt)
+        except FileExistsError:
+            data = input("do you want to overwrite this file? Y or N: ")
+            if data == "Y":
+                try:
+                    with open("important.salt","wb") as f:
+                        f.write(salt)
+                except FileNotFoundError:
+                    print("we could not find this file")
+                finally:
+                    f.close()
             else:
-                salt = file_data.encode("utf-8")
-                return salt
-            finally:
+                print("\nOkay, we did not overwrite this file")
+                f.close()
+        except OSError:
+            print("you had an OS issue")
+        finally:
                 f.close()
 
     @staticmethod
-    def derive_key(hand_data, salt):
+    def getSalt(filename):
+        try:
+            with open(filename, "rb") as f:
+                fileData = f.read()
+        except FileNotFoundError:
+            print("we could not find this file")
+        except EOFError:
+            print("no data is in this file")
+        except BufferError:
+            print("You have a buffer problem")
+        except ImportError:
+            print("You have a import error")
+        else:
+            salt = fileData
+            f.close()
+            return salt
+        finally:
+            f.close()
+
+    @staticmethod
+    def deriveKey(handData, salt):
         kdf = Argon2id(
             salt=salt,
             length=32,
@@ -56,48 +67,54 @@ class FileHandler:
             lanes=4,
             memory_cost=2 ** 21
         )
-        key = base64.urlsafe_b64encode(kdf.derive(hand_data.encode("utf-8")))
+        key = base64.urlsafe_b64encode(kdf.derive(handData.encode("utf-8")))
         return key
 
-    def encrypt(self, file_name, hand_data):
-        with open(file_name, "r") as f:
-            try:
-                file_data = f.read()
-            except FileNotFoundError:
-                print("we could not find this file")
-            except EOFError:
-                print("no data is in this file")
-            except BufferError:
-                print("You have a buffer problem")
-            except ImportError:
-                print("You have a import error")
-            else:
-                encryption_stuff = Fernet(self.create_key(hand_data))
-                data = encryption_stuff.encrypt(file_data.encode("utf-8"))
-                f.close()
-                return data
+    def encrypt(self, filename, handData):
+        try:
+            with open(filename, "r") as f:
+                fileData = f.read()
+        except FileNotFoundError:
+            print("we could not find this file")
+        except EOFError:
+            print("no data is in this file")
+        except BufferError:
+            print("You have a buffer problem")
+        except ImportError:
+            print("You have a import error")
+        else:
+            encryptionStuff = Fernet(self.createKey(handData))
+            data = encryptionStuff.encrypt(fileData.encode("utf-8"))
+            f.close()
+            return data
 
-    def decrypt(self, hand_file, hand_data, salt_file):
-        with open(hand_file, "r") as f:
+    def decrypt(self, gestureFile, handData, saltFile):
+        try:
+            with open(gestureFile, "r") as f:
+                wantedData = f.read()
+        except FileNotFoundError:
+            print("we could not find this file")
+        except EOFError:
+            print("no data is in this file")
+        except BufferError:
+            print("You have a buffer problem")
+        except ImportError:
+            print("You have a import error")
+        else:
+            f.close()
+            salt = self.getSalt(saltFile)
+            decryptionStuff = Fernet(self.getOldKey(handData,salt))
             try:
-                wanted_return_data = f.read()
-            except FileNotFoundError:
-                print("we could not find this file")
-            except EOFError:
-                print("no data is in this file")
-            except BufferError:
-                print("You have a buffer problem")
-            except ImportError:
-                print("You have a import error")
+                data = decryptionStuff.decrypt(wantedData.encode("utf-8"))
+            except cryptography.fernet.InvalidToken:
+                print("wrong password")
+            except TypeError:
+                print("wrong type used for password")
             else:
-                salt = self.get_salt(salt_file)
-                decryption_stuff = Fernet(self.get_old_key(hand_data,salt))
-                data = None
-                try:
-                    data = decryption_stuff.decrypt(wanted_return_data.encode("utf-8"))
-                except cryptography.fernet.InvalidToken:
-                    print("wrong password")
-                except TypeError:
-                    print("wrong type used for password")
-                f.close()
-                return data
+                if data is not None:
+                    stringData = data.decode("utf-8")
+                    return stringData
+                else:
+                    return data
+        finally:
+            f.close()

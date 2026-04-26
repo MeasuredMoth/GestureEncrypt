@@ -13,7 +13,7 @@ you can make yourself.
 - MediaPipe supported model (Can be found from above link)
 ## Running
 1. The project is intended to be ran in command prompt. The basic format is: `GestureEncrypt file.txt --output file.gesture`. 
-To decrypt the format would be `GestureEncrypt file.gesture --output file.txt`. Files encrypted must be of extension `.gesture`, 
+To decrypt the format would be `GestureEncrypt file.gesture --output file.txt --salt important.salt`. Files encrypted must be of extension `.gesture`, 
 and decrypted files must have their original extension set manually.
 2. Once ran a live video of your camera capture should appear. Any gestures recognized by the provided model will be 
 recorded after a short delay as part of the gesture password. See your model's support gestures for information on that.

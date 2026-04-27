@@ -1,7 +1,6 @@
 import mediapipe as mp
 from mediapipe.tasks.python import BaseOptions
-from mediapipe.tasks.python.vision import GestureRecognizerOptions, HandLandmarkerOptions, HandLandmarker, \
-    GestureRecognizer
+from mediapipe.tasks.python.vision import GestureRecognizerOptions, GestureRecognizer
 
 
 class GestureHandler:

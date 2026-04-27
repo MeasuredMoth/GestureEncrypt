@@ -12,6 +12,8 @@ class VideoStream:
 
         assert success, "Unable to read capture info!"
 
+        cv2.resize(image, (400, 400))
+
         image = cv2.flip(image, 1)
         imageRGB = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
